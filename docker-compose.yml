@@ -6,7 +6,7 @@ services:
       POSTGRES_USER: ${ObToGP_DB_USERNAME}
       POSTGRES_PASSWORD: ${ObToGP_DB_PASSWORD}
     ports:
-      - "5788:5788"
+      - "4033:4033"
     volumes:
       - postgres_data:/var/lib/postgresql/data
 

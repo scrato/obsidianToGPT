@@ -2,12 +2,14 @@ spring:
   application:
     name: obsidianToGpt
   jpa:
-    database-platform: org.hibernate.dialect.H2Dialect
-  spring:
-    datasource:
-      url: jdbc:postgresql://localhost:5432/obsidian_db
-      driverClassName: org.postgresql.Driver
-      username: ${ObToGP_DB_USERNAME}
-      password: ${ObToGP_DB_PASSWORD}
-    jpa:
-      database-platform: org.hibernate.dialect.PostgreSQLDialect
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+  datasource:
+    url: jdbc:postgresql://localhost:4033/obsidian_db
+    driverClassName: org.postgresql.Driver
+    username: ${ObToGP_DB_USERNAME}
+    password: ${ObToGP_DB_PASSWORD}
+  security:
+      oauth2:
+        resourceserver:
+          jwt:
+            issuer-uri: https://your-auth-server
