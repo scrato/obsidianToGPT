@@ -1,124 +1,109 @@
 package de.scrato.obsidianToGpt.controller
 
-import org.springframework.hateoas.EntityModel
-import org.springframework.hateoas.Link
-import org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.*
+import de.scrato.obsidianToGpt.config.PathConfig
+import de.scrato.obsidianToGpt.dto.FileListInfo
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.web.bind.annotation.*
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
-import org.springframework.web.bind.annotation.*
+import java.io.File
 import java.nio.file.Files
-import java.nio.file.Path
+import org.springframework.hateoas.EntityModel
+import org.springframework.hateoas.CollectionModel
+import org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo
+import org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.RequestParam
+import org.springframework.web.bind.annotation.RestController
 import java.nio.file.Paths
 import java.nio.file.StandardOpenOption
 
 @RestController
 @RequestMapping("/files")
-class FileController {
+class FileController @Autowired constructor(private val pathConfig: PathConfig)
+{
 
-    private val baseDirectory = Paths.get("C:\\Users\\willm\\privat\\rpgnotes")
 
-    // ✅ LIST FILES
+    private val baseDirectory = Paths.get(pathConfig.rootPath)
+
     @GetMapping("/list")
-    fun listFiles(): ResponseEntity<List<EntityModel<String>>> {
-        val files = Files.list(baseDirectory)
-            .filter { Files.isRegularFile(it) }
-            .map { file ->
-                val filename = file.fileName.toString()
-                EntityModel.of(
-                    filename,
-                    linkTo(methodOn(FileController::class.java).openFile(filename)).withRel("open")
-                )
-            }
-            .toList()
-
-        return ResponseEntity.ok(files)
-    }
-
-    // ✅ OPEN FILE
-    @GetMapping("/open")
-    fun openFile(@RequestParam("filename") filename: String): ResponseEntity<EntityModel<String>> {
-        val filePath = baseDirectory.resolve(filename)
-        if (!Files.exists(filePath) || !Files.isRegularFile(filePath)) {
-            return ResponseEntity.notFound().build()
+    fun listFiles(): ResponseEntity<CollectionModel<EntityModel<FileListInfo>>> {
+        val files: List<EntityModel<FileListInfo>> = getFilesRecursive(baseDirectory.toFile()).map { fileInfo ->
+            val entityModel = EntityModel.of(fileInfo)
+            val openLink = linkTo(methodOn(FileController::class.java).openFile(fileInfo.getFullPath())).withRel("open")
+            entityModel.add(openLink)
+            entityModel
         }
-
-        val content = Files.readString(filePath)
-
-        val entity = EntityModel.of(
-            content,
-            linkTo(methodOn(FileController::class.java).openFile(filename)).withSelfRel(),
-            linkTo(methodOn(FileController::class.java).listFiles()).withRel("list"),
-            linkTo(methodOn(FileController::class.java).updateFile(filename, "")).withRel("update"),
-            linkTo(methodOn(FileController::class.java).deleteFile(filename)).withRel("delete"),
-            linkTo(methodOn(FileController::class.java).moveFile(filename, "newname.txt")).withRel("move")
-        )
-
-        return ResponseEntity.ok(entity)
+        val collectionModel = CollectionModel.of(files)
+        return ResponseEntity.ok(collectionModel)
     }
 
-    // ✅ UPDATE FILE (nur authentifiziert)
+    private fun getFilesRecursive(baseDir: File): List<FileListInfo> {
+        val result = mutableListOf<FileListInfo>()
+
+        fun traverse(file: File, relativePath: String) {
+            if (file.name.startsWith(".")) return
+
+            if (file.isFile) {
+                result.add(FileListInfo(file.name, relativePath))
+            } else if (file.isDirectory) {
+                val newRelativePath = if (relativePath.isEmpty()) file.name else "$relativePath\\${file.name}"
+                file.listFiles()?.forEach { child ->
+                    traverse(child, newRelativePath)
+                }
+            }
+        }
+        baseDir.listFiles()?.forEach{ file -> traverse(file, "")}
+        return result
+    }
+
+    @GetMapping("/open")
+    fun openFile(@RequestParam("filename") filename: String): ResponseEntity<String> {
+        val filePath = baseDirectory.resolve(filename)
+        if (Files.exists(filePath) && Files.isRegularFile(filePath)) {
+            val content = Files.readString(filePath)
+            return ResponseEntity.ok(content)
+        }
+        return ResponseEntity.notFound().build()
+    }
+
     @PreAuthorize("isAuthenticated()")
     @PutMapping("/update")
     fun updateFile(
         @RequestParam("filename") filename: String,
         @RequestBody newContent: String
-    ): ResponseEntity<EntityModel<String>> {
+    ): ResponseEntity<String> {
         val filePath = baseDirectory.resolve(filename)
-        if (!Files.exists(filePath) || !Files.isRegularFile(filePath)) {
-            return ResponseEntity.notFound().build()
+        if (Files.exists(filePath) && Files.isRegularFile(filePath)) {
+            Files.writeString(filePath, newContent, StandardOpenOption.TRUNCATE_EXISTING)
+            return ResponseEntity.ok("Updated file successfully.")
         }
-
-        Files.writeString(filePath, newContent, StandardOpenOption.TRUNCATE_EXISTING)
-
-        val entity = EntityModel.of(
-            "Datei erfolgreich aktualisiert.",
-            linkTo(methodOn(FileController::class.java).openFile(filename)).withRel("open"),
-            linkTo(methodOn(FileController::class.java).listFiles()).withRel("list")
-        )
-
-        return ResponseEntity.ok(entity)
+        return ResponseEntity.notFound().build()
     }
 
-    // ✅ DELETE FILE (nur authentifiziert)
     @PreAuthorize("isAuthenticated()")
     @DeleteMapping("/delete")
-    fun deleteFile(@RequestParam("filename") filename: String): ResponseEntity<EntityModel<String>> {
+    fun deleteFile(@RequestParam("filename") filename: String): ResponseEntity<String> {
         val filePath = baseDirectory.resolve(filename)
-        if (!Files.exists(filePath) || !Files.isRegularFile(filePath)) {
-            return ResponseEntity.notFound().build()
+        if (Files.exists(filePath) && Files.isRegularFile(filePath)) {
+            Files.delete(filePath)
+            return ResponseEntity.ok("Deleted file successfully.")
         }
-
-        Files.delete(filePath)
-
-        val entity = EntityModel.of(
-            "Datei erfolgreich gelöscht.",
-            linkTo(methodOn(FileController::class.java).listFiles()).withRel("list")
-        )
-
-        return ResponseEntity.ok(entity)
+        return ResponseEntity.notFound().build()
     }
 
-    // ✅ MOVE FILE (nur authentifiziert)
     @PreAuthorize("isAuthenticated()")
     @PostMapping("/move")
     fun moveFile(
         @RequestParam("oldFilename") oldFilename: String,
         @RequestParam("newFilename") newFilename: String
-    ): ResponseEntity<EntityModel<String>> {
+    ): ResponseEntity<String> {
         val oldFilePath = baseDirectory.resolve(oldFilename)
         val newFilePath = baseDirectory.resolve(newFilename)
-        if (!Files.exists(oldFilePath) || !Files.isRegularFile(oldFilePath)) {
-            return ResponseEntity.notFound().build()
+        if (Files.exists(oldFilePath) && Files.isRegularFile(oldFilePath)) {
+            Files.move(oldFilePath, newFilePath)
+            return ResponseEntity.ok("Renamed file successfully.")
         }
-
-        Files.move(oldFilePath, newFilePath)
-
-        val entity = EntityModel.of(
-            "Datei erfolgreich umbenannt.",
-            linkTo(methodOn(FileController::class.java).openFile(newFilename)).withRel("open"),
-            linkTo(methodOn(FileController::class.java).listFiles()).withRel("list")
-        )
-
-        return ResponseEntity.ok(entity)
+        return ResponseEntity.notFound().build()
     }
 }

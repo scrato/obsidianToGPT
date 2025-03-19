@@ -9,7 +9,7 @@ spring:
     username: ${ObToGP_DB_USERNAME}
     password: ${ObToGP_DB_PASSWORD}
   security:
-      oauth2:
-        resourceserver:
-          jwt:
-            issuer-uri: https://your-auth-server
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: https://your-auth-server

@@ -7,5 +7,5 @@ import org.springframework.boot.runApplication
 class ObsidianToGptApplication
 
 fun main(args: Array<String>) {
-	runApplication<ObsidianToGptApplication>(*args)
+    runApplication<ObsidianToGptApplication>(*args)
 }
