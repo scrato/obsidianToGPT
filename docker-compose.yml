@@ -1,0 +1,14 @@
+services:
+  db:
+    image: postgres:latest
+    environment:
+      POSTGRES_DB: filemanager
+      POSTGRES_USER: ${ObToGP_DB_USERNAME}
+      POSTGRES_PASSWORD: ${ObToGP_DB_PASSWORD}
+    ports:
+      - "5788:5788"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
