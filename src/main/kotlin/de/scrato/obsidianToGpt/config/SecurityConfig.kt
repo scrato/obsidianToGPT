@@ -32,6 +32,6 @@ class SecurityConfig {
 
     @Bean
     fun jwtDecoder(): JwtDecoder {
-        return NimbusJwtDecoder.withJwkSetUri("https://your-auth-server/.well-known/jwks.json").build()
+        return NimbusJwtDecoder.withJwkSetUri("https://tavernlogin.eu.auth0.com/.well-known/jwks.json").build()
     }
 }

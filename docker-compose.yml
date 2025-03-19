@@ -9,6 +9,6 @@ services:
       - "4033:4033"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-
+    command: -p 4033
 volumes:
   postgres_data:

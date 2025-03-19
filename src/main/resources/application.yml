@@ -4,7 +4,7 @@ spring:
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
   datasource:
-    url: jdbc:postgresql://localhost:4033/obsidian_db
+    url: jdbc:postgresql://localhost:4033/filemanager
     driverClassName: org.postgresql.Driver
     username: ${ObToGP_DB_USERNAME}
     password: ${ObToGP_DB_PASSWORD}
@@ -12,4 +12,4 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: https://your-auth-server
+          issuer-uri: https://otg.herrscote.de/oauth

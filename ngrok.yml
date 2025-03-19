@@ -1,0 +1,15 @@
+version: "2"
+authtoken: 2egLBEKQexh9gsGsESUxNDOr5Fk_5WeX9Th8sKnCAEmGk59eu
+region: eu  # Wähle deine Region (us, eu, ap, au, sa, jp, in)
+
+tunnels:
+  webservice:
+    addr: 8080
+    proto: http
+    domain: otg.herrscote.de
+
+#  auth0:
+#    addr: tavernlogin.eu.auth0.com
+#    proto: http
+#    domain: otg.herrscote.de
+#    host_header: rewrite  # Setzt den richtigen Host-Header
