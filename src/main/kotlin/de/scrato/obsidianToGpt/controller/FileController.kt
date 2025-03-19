@@ -4,25 +4,21 @@ import de.scrato.obsidianToGpt.config.PathConfig
 import de.scrato.obsidianToGpt.dto.FileInfo
 import de.scrato.obsidianToGpt.dto.FileListInfo
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.web.bind.annotation.*
-import org.springframework.http.ResponseEntity
-import org.springframework.security.access.prepost.PreAuthorize
-import java.io.File
-import java.nio.file.Files
-import org.springframework.hateoas.EntityModel
 import org.springframework.hateoas.CollectionModel
+import org.springframework.hateoas.EntityModel
 import org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo
 import org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn
-import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.RequestParam
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.http.ResponseEntity
+import org.springframework.security.access.prepost.PreAuthorize
+import org.springframework.web.bind.annotation.*
+import java.io.File
+import java.nio.file.Files
 import java.nio.file.Paths
 import java.nio.file.StandardOpenOption
 
 @RestController
 @RequestMapping("/files")
-class FileController @Autowired constructor(pathConfig: PathConfig)
-{
+class FileController @Autowired constructor(pathConfig: PathConfig) {
 
 
     private val baseDirectory = Paths.get(pathConfig.rootPath)
@@ -58,7 +54,7 @@ class FileController @Autowired constructor(pathConfig: PathConfig)
                 }
             }
         }
-        baseDir.listFiles()?.forEach{ file -> traverse(file, "")}
+        baseDir.listFiles()?.forEach { file -> traverse(file, "") }
         return result
     }
 
