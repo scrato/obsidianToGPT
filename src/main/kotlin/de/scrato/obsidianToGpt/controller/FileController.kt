@@ -1,6 +1,7 @@
 package de.scrato.obsidianToGpt.controller
 
 import de.scrato.obsidianToGpt.config.PathConfig
+import de.scrato.obsidianToGpt.dto.FileInfo
 import de.scrato.obsidianToGpt.dto.FileListInfo
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.web.bind.annotation.*
@@ -20,7 +21,7 @@ import java.nio.file.StandardOpenOption
 
 @RestController
 @RequestMapping("/files")
-class FileController @Autowired constructor(private val pathConfig: PathConfig)
+class FileController @Autowired constructor(pathConfig: PathConfig)
 {
 
 
@@ -28,13 +29,17 @@ class FileController @Autowired constructor(private val pathConfig: PathConfig)
 
     @GetMapping("/list")
     fun listFiles(): ResponseEntity<CollectionModel<EntityModel<FileListInfo>>> {
-        val files: List<EntityModel<FileListInfo>> = getFilesRecursive(baseDirectory.toFile()).map { fileInfo ->
+        if (!Files.exists(baseDirectory) || !Files.isDirectory(baseDirectory)) {
+            return ResponseEntity.notFound().build()
+        }
+        val fileInfos = getFilesRecursive(baseDirectory.toFile())
+        val result: List<EntityModel<FileListInfo>> = fileInfos.map { fileInfo ->
             val entityModel = EntityModel.of(fileInfo)
             val openLink = linkTo(methodOn(FileController::class.java).openFile(fileInfo.getFullPath())).withRel("open")
             entityModel.add(openLink)
             entityModel
         }
-        val collectionModel = CollectionModel.of(files)
+        val collectionModel = CollectionModel.of(result)
         return ResponseEntity.ok(collectionModel)
     }
 
@@ -58,11 +63,16 @@ class FileController @Autowired constructor(private val pathConfig: PathConfig)
     }
 
     @GetMapping("/open")
-    fun openFile(@RequestParam("filename") filename: String): ResponseEntity<String> {
+    fun openFile(@RequestParam("filename") filename: String): ResponseEntity<EntityModel<FileInfo>> {
         val filePath = baseDirectory.resolve(filename)
         if (Files.exists(filePath) && Files.isRegularFile(filePath)) {
-            val content = Files.readString(filePath)
-            return ResponseEntity.ok(content)
+            val file = FileInfo(filename, Files.readString(filePath))
+            val entityModel = EntityModel.of(file)
+            entityModel.add(linkTo(methodOn(FileController::class.java).updateFile(filename, "")).withRel("update"))
+            entityModel.add(linkTo(methodOn(FileController::class.java).deleteFile(filename)).withRel("delete"))
+            entityModel.add(linkTo(methodOn(FileController::class.java).moveFile(filename, "")).withRel("move"))
+            entityModel.add(linkTo(methodOn(FileController::class.java).listFiles()).withRel("list"))
+            return ResponseEntity.ok(entityModel)
         }
         return ResponseEntity.notFound().build()
     }
