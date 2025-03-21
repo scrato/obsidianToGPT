@@ -6,6 +6,7 @@ import de.scrato.obsidianToGpt.dto.FileListInfo
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.hateoas.CollectionModel
 import org.springframework.hateoas.EntityModel
+import org.springframework.hateoas.config.EnableHypermediaSupport
 import org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo
 import org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn
 import org.springframework.http.ResponseEntity

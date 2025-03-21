@@ -1,0 +1,4 @@
+paths:
+  rootPath: "C:\\Users\\willm\\privat\\rpgnotes"
+app:
+  useNgrok: true

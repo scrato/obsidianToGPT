@@ -1,2 +1,4 @@
 paths:
   rootPath: "E:\\repos\\obsidian\\rpgnotes"
+app:
+  useNgrok: false

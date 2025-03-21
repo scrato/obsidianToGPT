@@ -1,10 +1,16 @@
 package de.scrato.obsidianToGpt.config
 
+import de.scrato.obsidianToGpt.services.UserService
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.security.authentication.AuthenticationManager
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
+import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.security.oauth2.jwt.JwtDecoder
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder
 import org.springframework.security.web.SecurityFilterChain
@@ -12,7 +18,10 @@ import org.springframework.security.web.SecurityFilterChain
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
-class SecurityConfig {
+class SecurityConfig(@Autowired private val userService: UserService) {
+
+    @Bean
+    fun passwordEncoder(): PasswordEncoder = BCryptPasswordEncoder()
 
     @Bean
     fun securityFilterChain(http: HttpSecurity): SecurityFilterChain {
@@ -22,16 +31,11 @@ class SecurityConfig {
                     .requestMatchers("/files/list", "/files/open").permitAll()
                     .anyRequest().authenticated()
             }
-            .oauth2ResourceServer { oauth2 ->
-                oauth2.jwt { _ -> }// Ggf. zusätzliche Konfiguration
-            }
-            .csrf { it.disable() } // Deaktiviert CSRF für REST-APIs
-
+            .csrf { it.disable() }
         return http.build()
     }
-
-    @Bean
-    fun jwtDecoder(): JwtDecoder {
-        return NimbusJwtDecoder.withJwkSetUri("https://tavernlogin.eu.auth0.com/.well-known/jwks.json").build()
+        @Bean
+    fun authenticationManager(authenticationConfiguration: AuthenticationConfiguration): AuthenticationManager {
+        return authenticationConfiguration.authenticationManager
     }
 }
