@@ -31,8 +31,10 @@ class FileController @Autowired constructor(pathConfig: PathConfig) {
         val fileInfos = getFilesRecursive(baseDirectory.toFile())
         val result: List<EntityModel<FileListInfo>> = fileInfos.map { fileInfo ->
             val entityModel = EntityModel.of(fileInfo)
-            val openLink = linkTo(methodOn(FileController::class.java).openFile(fileInfo.getFullPath())).withRel("open")
-            entityModel.add(openLink)
+            if(fileInfo.mimeType.startsWith("text") || fileInfo.mimeType == "application/markdown" || fileInfo.mimeType == "application/json")
+            {
+                entityModel.add(linkTo(methodOn(FileController::class.java).openFile(fileInfo.getFullPath())).withRel("open"))
+            }
             entityModel
         }
         val collectionModel = CollectionModel.of(result)
@@ -46,7 +48,8 @@ class FileController @Autowired constructor(pathConfig: PathConfig) {
             if (file.name.startsWith(".")) return
 
             if (file.isFile) {
-                result.add(FileListInfo(file.name, relativePath))
+                val mimeType = Files.probeContentType(file.toPath()) ?: "application/octet-stream"
+                result.add(FileListInfo(file.name, relativePath, mimeType))
             } else if (file.isDirectory) {
                 val newRelativePath = if (relativePath.isEmpty()) file.name else "$relativePath\\${file.name}"
                 file.listFiles()?.forEach { child ->
@@ -62,7 +65,9 @@ class FileController @Autowired constructor(pathConfig: PathConfig) {
     fun openFile(@RequestParam("filename") filename: String): ResponseEntity<EntityModel<FileInfo>> {
         val filePath = baseDirectory.resolve(filename)
         if (Files.exists(filePath) && Files.isRegularFile(filePath)) {
-            val file = FileInfo(filename, Files.readString(filePath))
+            val fileContent = Files.readString(filePath)
+
+            val file = FileInfo(filename, fileContent)
             val entityModel = EntityModel.of(file)
             entityModel.add(linkTo(methodOn(FileController::class.java).updateFile(filename, "")).withRel("update"))
             entityModel.add(linkTo(methodOn(FileController::class.java).deleteFile(filename)).withRel("delete"))
