@@ -1,6 +1,6 @@
 package de.scrato.obsidianToGpt.controller
 
-import de.scrato.obsidianToGpt.config.PathConfig
+import de.scrato.obsidianToGpt.config.properties.PathProperties
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import org.springframework.http.MediaType
@@ -31,8 +31,8 @@ class FileControllerListTest {
         Files.createFile(hiddenDir.resolve("hiddenInside.txt"))
 
         // Erstelle die für den Controller notwendige PathConfig
-        val pathConfig = PathConfig().apply { rootPath = tempDir.toString() }
-        val controller = FileController(pathConfig)
+        val pathProperties = PathProperties().apply { rootPath = tempDir.toString() }
+        val controller = FileController(pathProperties)
         val mockMvc: MockMvc = MockMvcBuilders.standaloneSetup(controller).build()
 
         // GET /files/list aufrufen und prüfen:
@@ -63,8 +63,8 @@ class FileControllerListTest {
         // Erzeuge ein temporäres Verzeichnis und wähle einen Unterordner, der nicht existiert
         val tempDir = Files.createTempDirectory("testDir")
         val nonExistentPath = tempDir.resolve("nonexistent")
-        val pathConfig = PathConfig().apply { rootPath = nonExistentPath.toString() }
-        val controller = FileController(pathConfig)
+        val pathProperties = PathProperties().apply { rootPath = nonExistentPath.toString() }
+        val controller = FileController(pathProperties)
         val mockMvc: MockMvc = MockMvcBuilders.standaloneSetup(controller).build()
 
         mockMvc.get("/files/list")
