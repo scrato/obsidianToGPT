@@ -1,12 +1,11 @@
 package de.scrato.obsidianToGpt.controller
 
-import de.scrato.obsidianToGpt.config.PathConfig
+import de.scrato.obsidianToGpt.config.properties.PathProperties
 import de.scrato.obsidianToGpt.dto.FileInfo
 import de.scrato.obsidianToGpt.dto.FileListInfo
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.hateoas.CollectionModel
 import org.springframework.hateoas.EntityModel
-import org.springframework.hateoas.config.EnableHypermediaSupport
 import org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo
 import org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn
 import org.springframework.http.ResponseEntity
@@ -18,11 +17,11 @@ import java.nio.file.Paths
 import java.nio.file.StandardOpenOption
 
 @RestController
-@RequestMapping("/files")
-class FileController @Autowired constructor(pathConfig: PathConfig) {
+@RequestMapping("/api/files")
+class FileController @Autowired constructor(pathProperties: PathProperties) {
 
 
-    private val baseDirectory = Paths.get(pathConfig.rootPath)
+    private val baseDirectory = Paths.get(pathProperties.rootPath)
 
     @GetMapping("/list")
     fun listFiles(): ResponseEntity<CollectionModel<EntityModel<FileListInfo>>> {
