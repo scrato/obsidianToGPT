@@ -1,41 +1,35 @@
 package de.scrato.obsidianToGpt.config
 
-import de.scrato.obsidianToGpt.services.UserService
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import org.springframework.security.authentication.AuthenticationManager
-import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration
+import org.springframework.security.authentication.AuthenticationProvider
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
-import org.springframework.security.crypto.password.PasswordEncoder
-import org.springframework.security.oauth2.jwt.JwtDecoder
-import org.springframework.security.oauth2.jwt.NimbusJwtDecoder
-import org.springframework.security.web.SecurityFilterChain
+import org.springframework.security.config.http.SessionCreationPolicy
+import org.springframework.security.web.DefaultSecurityFilterChain
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter
 
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
-class SecurityConfig(@Autowired private val userService: UserService) {
+class SecurityConfig(private val authenticationProvider: AuthenticationProvider) {
 
     @Bean
-    fun passwordEncoder(): PasswordEncoder = BCryptPasswordEncoder()
-
-    @Bean
-    fun securityFilterChain(http: HttpSecurity): SecurityFilterChain {
+    fun securityFilterChain(http: HttpSecurity, jwtAuthenticationFilter: JwtAuthenticationFilter) : DefaultSecurityFilterChain {
         http
             .authorizeHttpRequests { auth ->
                 auth
-                    .requestMatchers("/files/list", "/files/open").permitAll()
-                    .anyRequest().authenticated()
+                    .requestMatchers("/api/files/list", "/api/files/open").permitAll()
+                    .requestMatchers("/api/oauth/auth", "/api/oauth/auth/refresh", "/error").permitAll()
+                    .requestMatchers("/api/files/update", "/api/files/delete", "/api/files/move").hasRole("USER")
+                    .requestMatchers("/api/user**").hasRole("ADMIN")
+                    .anyRequest().fullyAuthenticated()
             }
             .csrf { it.disable() }
+            .sessionManagement{it.sessionCreationPolicy(SessionCreationPolicy.STATELESS)}
+            .authenticationProvider(authenticationProvider)
+            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter::class.java)
         return http.build()
-    }
-        @Bean
-    fun authenticationManager(authenticationConfiguration: AuthenticationConfiguration): AuthenticationManager {
-        return authenticationConfiguration.authenticationManager
     }
 }

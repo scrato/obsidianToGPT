@@ -9,7 +9,7 @@ class UserEntity(
     @Id @GeneratedValue(strategy = GenerationType.UUID)
     val id: UUID,
     val username: String,
-    val password: String,
+    var password: String,
     @Enumerated(EnumType.STRING) val role: UserRole) {
 }
 

@@ -6,11 +6,12 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.security.core.authority.*
 import org.springframework.security.core.context.*
 import org.springframework.security.core.userdetails.*
+import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 import java.util.*
 
 @Service
-class UserService(@Autowired val userRepository: UserRepository) : UserDetailsService {
+class UserService(@Autowired val userRepository: UserRepository, val encoder: PasswordEncoder) : UserDetailsService {
 
     override fun loadUserByUsername(username: String): UserDetails {
         val user = userRepository.findByUsername(username).orElseThrow {
@@ -33,6 +34,7 @@ class UserService(@Autowired val userRepository: UserRepository) : UserDetailsSe
     fun createUser(user: UserEntity): UserEntity? {
         val found = userRepository.findByUsername(user.username)
         return if (found.isEmpty) {
+            user.password = encoder.encode(user.password)
             userRepository.save(user)
             user
         } else null
