@@ -2,9 +2,8 @@ package de.scrato.obsidianToGpt.controller
 
 import de.scrato.obsidianToGpt.config.properties.Auth0Properties
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.http.ResponseEntity
 import org.springframework.http.HttpStatus
+import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.util.UriComponentsBuilder
 import java.net.URI

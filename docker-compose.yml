@@ -2,7 +2,7 @@ services:
   db:
     image: postgres:latest
     environment:
-      POSTGRES_DB: filemanager
+      POSTGRES_DB: fileManager
       POSTGRES_USER: ${ObToGP_DB_USERNAME}
       POSTGRES_PASSWORD: ${ObToGP_DB_PASSWORD}
     ports:

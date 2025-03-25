@@ -7,5 +7,4 @@ import org.springframework.context.annotation.Configuration
 
 @Configuration
 @EnableConfigurationProperties(ApplicationProperties::class, PathProperties::class, Auth0Properties::class)
-class Configuration {
-}
+class Configuration

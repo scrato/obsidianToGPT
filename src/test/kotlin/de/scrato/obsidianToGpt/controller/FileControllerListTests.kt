@@ -31,7 +31,7 @@ class FileControllerListTest {
         Files.createFile(hiddenDir.resolve("hiddenInside.txt"))
 
         // Erstelle die für den Controller notwendige PathConfig
-        val pathProperties = PathProperties().apply { rootPath = tempDir.toString() }
+        val pathProperties = PathProperties(tempDir.toString())
         val controller = FileController(pathProperties)
         val mockMvc: MockMvc = MockMvcBuilders.standaloneSetup(controller).build()
 
@@ -63,7 +63,7 @@ class FileControllerListTest {
         // Erzeuge ein temporäres Verzeichnis und wähle einen Unterordner, der nicht existiert
         val tempDir = Files.createTempDirectory("testDir")
         val nonExistentPath = tempDir.resolve("nonexistent")
-        val pathProperties = PathProperties().apply { rootPath = nonExistentPath.toString() }
+        val pathProperties = PathProperties(nonExistentPath.toString())
         val controller = FileController(pathProperties)
         val mockMvc: MockMvc = MockMvcBuilders.standaloneSetup(controller).build()
 
