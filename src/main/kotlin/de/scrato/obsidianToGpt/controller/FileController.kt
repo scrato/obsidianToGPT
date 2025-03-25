@@ -3,6 +3,7 @@ package de.scrato.obsidianToGpt.controller
 import de.scrato.obsidianToGpt.config.properties.PathProperties
 import de.scrato.obsidianToGpt.dto.FileInfo
 import de.scrato.obsidianToGpt.dto.FileListInfo
+import de.scrato.obsidianToGpt.services.FileActionService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.hateoas.CollectionModel
 import org.springframework.hateoas.EntityModel
@@ -18,7 +19,8 @@ import java.nio.file.StandardOpenOption
 
 @RestController
 @RequestMapping("/files")
-class FileController @Autowired constructor(pathProperties: PathProperties) {
+class FileController @Autowired constructor(pathProperties: PathProperties,
+                                            private val fileActionService: FileActionService) {
 
 
     private val baseDirectory = Paths.get(pathProperties.rootPath)
@@ -35,6 +37,7 @@ class FileController @Autowired constructor(pathProperties: PathProperties) {
             {
                 entityModel.add(linkTo(methodOn(FileController::class.java).openFile(fileInfo.getFullPath())).withRel("open"))
             }
+            entityModel.add(linkTo(methodOn(FileController::class.java).createFile("{filename}", "{content}")).withRel("create"))
             entityModel
         }
         val collectionModel = CollectionModel.of(result)
@@ -61,18 +64,30 @@ class FileController @Autowired constructor(pathProperties: PathProperties) {
         return result
     }
 
+    @PreAuthorize("isAuthenticated()")
+    @PostMapping("/create")
+    fun createFile(
+        @RequestParam("filename") filename: String,
+        @RequestBody content: String
+    ): ResponseEntity<EntityModel<FileInfo>> {
+        val filePath = baseDirectory.resolve(filename)
+        if (Files.exists(filePath)) {
+            return ResponseEntity.status(409).body(null)
+        }
+        Files.writeString(filePath, content, StandardOpenOption.CREATE_NEW)
+        fileActionService.createFileAction(filename, "create", content)
+        val entityModel = createFileInfoForFile(filename, content)
+        return ResponseEntity.ok(entityModel)
+    }
+
     @GetMapping("/open")
     fun openFile(@RequestParam("filename") filename: String): ResponseEntity<EntityModel<FileInfo>> {
         val filePath = baseDirectory.resolve(filename)
         if (Files.exists(filePath) && Files.isRegularFile(filePath)) {
             val fileContent = Files.readString(filePath)
+            val entityModel = createFileInfoForFile(filename, fileContent)
 
-            val file = FileInfo(filename, fileContent)
-            val entityModel = EntityModel.of(file)
-            entityModel.add(linkTo(methodOn(FileController::class.java).updateFile(filename, "")).withRel("update"))
-            entityModel.add(linkTo(methodOn(FileController::class.java).deleteFile(filename)).withRel("delete"))
-            entityModel.add(linkTo(methodOn(FileController::class.java).moveFile(filename, "")).withRel("move"))
-            entityModel.add(linkTo(methodOn(FileController::class.java).listFiles()).withRel("list"))
+            fileActionService.createFileAction(filename, "open", fileContent)
             return ResponseEntity.ok(entityModel)
         }
         return ResponseEntity.notFound().build()
@@ -83,22 +98,39 @@ class FileController @Autowired constructor(pathProperties: PathProperties) {
     fun updateFile(
         @RequestParam("filename") filename: String,
         @RequestBody newContent: String
-    ): ResponseEntity<String> {
+    ): ResponseEntity<EntityModel<FileInfo>> {
         val filePath = baseDirectory.resolve(filename)
         if (Files.exists(filePath) && Files.isRegularFile(filePath)) {
             Files.writeString(filePath, newContent, StandardOpenOption.TRUNCATE_EXISTING)
-            return ResponseEntity.ok("Updated file successfully.")
+            val entityModel = createFileInfoForFile(filename, newContent)
+
+            fileActionService.createFileAction(filename, "update", newContent)
+            return ResponseEntity.ok(entityModel)
         }
         return ResponseEntity.notFound().build()
     }
 
+    fun createFileInfoForFile(name: String, content: String): EntityModel<FileInfo>
+    {
+        val file = FileInfo(name, content)
+        val entityModel = EntityModel.of(file)
+        entityModel.add(linkTo(methodOn(FileController::class.java).updateFile(name, "{content}")).withRel("update"))
+        entityModel.add(linkTo(methodOn(FileController::class.java).deleteFile(name)).withRel("delete"))
+        entityModel.add(linkTo(methodOn(FileController::class.java).moveFile(name, "{newName}")).withRel("move"))
+        entityModel.add(linkTo(methodOn(FileController::class.java).listFiles()).withRel("list"))
+        return entityModel
+    }
+
     @PreAuthorize("isAuthenticated()")
     @DeleteMapping("/delete")
-    fun deleteFile(@RequestParam("filename") filename: String): ResponseEntity<String> {
+    fun deleteFile(@RequestParam("filename") filename: String): ResponseEntity<EntityModel<FileInfo>> {
         val filePath = baseDirectory.resolve(filename)
         if (Files.exists(filePath) && Files.isRegularFile(filePath)) {
             Files.delete(filePath)
-            return ResponseEntity.ok("Deleted file successfully.")
+            val entityModel = createFileInfoForFile(filename, "")
+            entityModel.add(linkTo(methodOn(FileController::class.java).listFiles()).withRel("list"))
+            fileActionService.createFileAction(filename, "delete", "")
+            return ResponseEntity.ok(entityModel)
         }
         return ResponseEntity.notFound().build()
     }
@@ -113,6 +145,7 @@ class FileController @Autowired constructor(pathProperties: PathProperties) {
         val newFilePath = baseDirectory.resolve(newFilename)
         if (Files.exists(oldFilePath) && Files.isRegularFile(oldFilePath)) {
             Files.move(oldFilePath, newFilePath)
+            fileActionService.createFileAction(newFilename, "move", "$oldFilename -> $newFilename")
             return ResponseEntity.ok("Renamed file successfully.")
         }
         return ResponseEntity.notFound().build()
