@@ -17,7 +17,7 @@ import java.nio.file.Paths
 import java.nio.file.StandardOpenOption
 
 @RestController
-@RequestMapping("/api/files")
+@RequestMapping("/files")
 class FileController @Autowired constructor(pathProperties: PathProperties) {
 
 

@@ -14,10 +14,10 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: https://tavernlogin.eu.auth0.com
+          issuer-uri: https://tavernlogin.eu.auth0.com/
 
 auth0:
-  domain: https://tavernlogin.eu.auth0.com
-  clientId: $(ObToGP_AUTH_CLIENT_ID)
-  clientSecret: $(ObToGP_AUTH_CLIENT_SECRET)
+  domain: tavernlogin.eu.auth0.com
+  clientId: $(ObToGP_OAUTH2_CLIENT_ID)
+  clientSecret: $(ObToGP_OAUTH2_CLIENT_SECRET)
 

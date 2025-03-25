@@ -29,16 +29,13 @@ class SecurityConfig(@Autowired private val userService: UserService) {
             .authorizeHttpRequests { auth ->
                 auth
                     .requestMatchers("/files/list", "/files/open").permitAll()
-                    .requestMatchers("/auth/authorize").permitAll()
+                    .requestMatchers("/auth/authorize", "/auth/token").permitAll()
+                    .requestMatchers("/error").permitAll()
                     .requestMatchers("/files/update", "/files/create", "/files/delete", "/files/move").hasAuthority("SCOPE_edit:files")
                     .anyRequest().authenticated()
             }
             .csrf { it.disable() }
             .oauth2ResourceServer { it.jwt {} }
         return http.build()
-    }
-        @Bean
-    fun authenticationManager(authenticationConfiguration: AuthenticationConfiguration): AuthenticationManager {
-        return authenticationConfiguration.authenticationManager
     }
 }
