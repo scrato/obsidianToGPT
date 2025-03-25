@@ -1,5 +1,7 @@
 package de.scrato.obsidianToGpt.controller
 
+import de.scrato.obsidianToGpt.config.properties.Auth0Properties
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.ResponseEntity
 import org.springframework.http.HttpStatus
@@ -9,9 +11,7 @@ import java.net.URI
 
 @RestController
 @RequestMapping("/auth")
-class AuthController {
-    @Value("\${auth0.domain}")
-    lateinit var auth0Domain: String
+class AuthController(@Autowired val auth0Properties: Auth0Properties) {
 
     @GetMapping("/authorize")
     fun authorize(@RequestParam("client_id") clientId: String,
@@ -19,7 +19,7 @@ class AuthController {
                   @RequestParam("response_type") responseType: String,
                   @RequestParam("scope", required = false) scope: String?,
                   @RequestParam("state", required = false) state: String?): ResponseEntity<Void> {
-        val uriBuilder = UriComponentsBuilder.fromUriString("https://$auth0Domain/authorize")
+        val uriBuilder = UriComponentsBuilder.fromUriString("https://${auth0Properties.domain}/authorize")
             .queryParam("response_type", responseType)
             .queryParam("client_id", clientId)
             .queryParam("redirect_uri", callback)
@@ -47,7 +47,7 @@ class AuthController {
                   @RequestParam("code") code: String,
                   @RequestParam("grant_type") grantType: String?,
                   @RequestParam("redirect_uri") redirectUri: String?): ResponseEntity<Void> {
-        val uriBuilder = UriComponentsBuilder.fromUriString("https://$auth0Domain/oauth/token")
+        val uriBuilder = UriComponentsBuilder.fromUriString("https://${auth0Properties.domain}/oauth/token")
             .queryParam("client_id", clientId)
             .queryParam("client_secret", clientSecret)
             .queryParam("code", code)

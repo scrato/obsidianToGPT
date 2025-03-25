@@ -18,6 +18,3 @@ spring:
 
 auth0:
   domain: tavernlogin.eu.auth0.com
-  clientId: $(ObToGP_OAUTH2_CLIENT_ID)
-  clientSecret: $(ObToGP_OAUTH2_CLIENT_SECRET)
-
