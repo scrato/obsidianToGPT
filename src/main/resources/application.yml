@@ -10,7 +10,14 @@ spring:
     driverClassName: org.postgresql.Driver
     username: ${ObToGP_DB_USERNAME}
     password: ${ObToGP_DB_PASSWORD}
-jwt:
-  key: ${JWT_KEY}
-  access-token-expiration: 3600000
-  refresh-token-expiration: 86400000
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: https://tavernlogin.eu.auth0.com
+
+auth0:
+  domain: https://tavernlogin.eu.auth0.com
+  clientId: $(ObToGP_AUTH_CLIENT_ID)
+  clientSecret: $(ObToGP_AUTH_CLIENT_SECRET)
+
