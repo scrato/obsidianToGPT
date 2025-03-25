@@ -1,6 +1,5 @@
 package de.scrato.obsidianToGpt.config
 
-import de.scrato.obsidianToGpt.services.UserService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -18,11 +17,7 @@ import org.springframework.security.web.SecurityFilterChain
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
-class SecurityConfig(@Autowired private val userService: UserService) {
-
-    @Bean
-    fun passwordEncoder(): PasswordEncoder = BCryptPasswordEncoder()
-
+class SecurityConfig() {
     @Bean
     fun securityFilterChain(http: HttpSecurity): SecurityFilterChain {
         http
